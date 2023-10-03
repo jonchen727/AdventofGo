@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	//"reflect"
 	//"strconv"
 	"flag"
 	//"sort"
@@ -30,12 +31,12 @@ func main() {
 	fmt.Println("Part", part)
 
 	if part == 1 {
-		answer := part1(input)
-		fmt.Println("Answer: ", answer)
+	answer := part1(input)
 
+	fmt.Println("Part 1 Answer:", answer)
 	} else {
 		ans := part2(input)
-		fmt.Println("Answer:", ans)
+		fmt.Println("Part 2 Answer:", ans)
 		//fmt.Println("Answer:", ans)
 	}
 
@@ -46,21 +47,37 @@ func part1(input string) string {
 	var ans string
 	for _, step := range steps {
 		move := blocks[step.from][len(blocks[step.from])-step.amt:]
+    fmt.Println(move)
 		slices.Reverse(move)
 		blocks[step.from] = blocks[step.from][:len(blocks[step.from])-step.amt]
 		blocks[step.to] = append(blocks[step.to], move...)
-		fmt.Println("Move:", move)
 	}
 
+	fmt.Println("Blocks:", blocks)
 	for _, block := range blocks {
 		ans += block[len(block)-1]
 	}
-	fmt.Println(blocks)
+
 	return ans
 }
 
-func part2(input string) int {
-	return 0
+func part2(input string) string {
+	blocks, steps := parseInput(input)
+	var ans string
+	for _, step := range steps {
+		move := blocks[step.from][len(blocks[step.from])-step.amt:]
+    fmt.Println(move)
+		blocks[step.from] = blocks[step.from][:len(blocks[step.from])-step.amt]
+		blocks[step.to] = append(blocks[step.to], move...)
+	}
+
+	fmt.Println("Blocks:", blocks)
+	for _, block := range blocks {
+		ans += block[len(block)-1]
+	}
+
+	return ans
+
 }
 
 type command struct {
