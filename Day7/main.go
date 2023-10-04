@@ -10,7 +10,7 @@ import (
 	"flag"
 	"time"
 	//"sort"
-	//"github.com/jonchen727/2022-AdventofCode/helpers"
+	"github.com/jonchen727/2022-AdventofCode/helpers"
 )
 
 //go:embed input.txt
@@ -56,7 +56,12 @@ func part1(input string) int {
 }
 
 func part2(input string) int{
-	return 0
+	root := parseInput(input)
+	maxspace := 70000000
+	reqspace := 30000000
+	filemin := reqspace-(maxspace-root.size)
+	ans := smallestdirectory(root, filemin)
+	return ans
 }
 
 type dir struct {
@@ -168,4 +173,20 @@ func find100000(directory *dir) int {
 		sum += find100000(childDir)
 	}
 	return sum
+}
+
+func smallestdirectory(directory *dir, filemin int) int {
+	minsize := 70000000
+
+
+	if directory.size >= filemin {
+	  minsize = helpers.MinInt(minsize, directory.size)
+	}
+
+	for _, childDir := range directory.children {
+		minsize = helpers.MinInt(minsize, smallestdirectory(childDir, filemin))
+	}
+
+	return minsize
+
 }

@@ -17,3 +17,13 @@ func SumIntSlice(nums []int) int {
 	}
 	return sum
 }
+
+func MinInt(nums ...int) int {
+	minNum := nums[0]
+	for _, num := range nums {
+		if num < minNum {
+			minNum = num
+		}
+	}
+	return minNum
+}
