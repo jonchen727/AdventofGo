@@ -51,7 +51,16 @@ func part1(input string) int {
 }
 
 func part2(input string) int {
-	return 0
+	trees := parseInput(input)
+	scores := senicscore(trees)
+	ans := 0
+	for _, score := range scores {
+		if score > ans {
+			ans = score
+		}
+	}
+
+	return ans
 }
 
 func parseInput(input string) [][]int {
@@ -122,6 +131,68 @@ func visable(input [][]int) int {
 				}
 			}
 		}
+	}
+
+	return ans
+}
+
+func senicscore(input [][]int) []int {
+	ans := []int{}
+
+	for i := 1; i < len(input)-1; i++ {
+		for j := 1; j < len(input[i])-1; j++ {
+			top := 0
+			bottom := 0
+			left := 0
+			right := 0
+			height := input[i][j]
+			//fmt.Println("height:", height)
+			// check top
+			for t := 1; t <= i; t++ {
+				if input[i-t][j] >= height {
+					//fmt.Println("last tree top")
+					top++
+					//fmt.Println("Too Tall:", height, input[i-t][j])
+					break
+				}
+				top++
+			}
+			// check bottom
+			for b := 1; b <= len(input)-i-1; b++ {
+				if input[i+b][j] >= height {
+					//fmt.Println("last tree bottom")
+					bottom++
+
+					break
+				}
+				bottom++
+			}
+			// check left
+			for l := 1; l <= j; l++ {
+				if input[i][j-l] >= height {
+					//fmt.Println("last tree left")
+					left++
+					break
+				}
+				left++
+			}
+			// check right
+			for r := 1; r <= len(input[i])-j-1; r++ {
+				if input[i][j+r] >= height {
+					//fmt.Println("last tree right")
+					right++
+					break
+				}
+				right++
+			}
+			// fmt.Println("top:", top)
+			// fmt.Println("bottom:", bottom)
+			// fmt.Println("left:", left)
+			// fmt.Println("right:", right)
+
+			ans = append(ans, top*bottom*left*right)
+		}
+
 	}
 
 	return ans
