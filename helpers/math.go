@@ -27,3 +27,10 @@ func MinInt(nums ...int) int {
 	}
 	return minNum
 }
+
+func Abs(num int) int {
+	if num < 0 {
+		return -num
+	}
+	return num
+}
