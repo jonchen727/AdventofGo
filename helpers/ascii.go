@@ -5,6 +5,25 @@ import (
 	"strconv"
 )
 
+
+func SliceToInt(arg interface{}) []int {
+	var val []int
+	switch arg.(type) {
+	case []string:
+		for _, str := range arg.([]string) {
+			num, err := strconv.Atoi(str)
+			if err != nil {
+				panic("error converting string to int" + err.Error())
+			}
+			val = append(val, num)
+		}
+	default:
+	  panic(fmt.Sprintf("unhandled type %T", arg))
+	}
+	return val
+}
+
+
 func ToInt(arg interface{}) int {
 	var val int
 	switch arg.(type) {
