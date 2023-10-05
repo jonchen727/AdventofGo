@@ -1,4 +1,5 @@
 package helpers
+import "reflect"
 
 func MaxInt(nums ...int) int {
 	maxNum := nums[0]
@@ -33,4 +34,10 @@ func Abs(num int) int {
 		return -num
 	}
 	return num
+}
+
+
+
+func DeepEqual(a1, a2 interface{}) bool {
+    return reflect.DeepEqual(a1, a2)
 }

@@ -33,6 +33,8 @@ func ToInt(arg interface{}) int {
 		if err != nil {
 			panic("error converting string to int" + err.Error())
 		}
+	case rune:
+		val = int(arg.(rune))
 	default:
 	  panic(fmt.Sprintf("unhandled type %T", arg))
 	}
