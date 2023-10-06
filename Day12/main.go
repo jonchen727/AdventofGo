@@ -8,7 +8,7 @@ import (
 	//"reflect"
 	//"strconv"
 	"flag"
-	//"math"
+	"math"
 	"time"
 	//"sort"
 	"github.com/jonchen727/2022-AdventofCode/helpers"
@@ -36,7 +36,7 @@ func main() {
 
 		fmt.Println("Part 1 Answer:", ans)
 	} else {
-		ans := part2(input, 9)
+		ans := part2(input)
 		fmt.Println("Part 2 Answer:", ans)
 		//fmt.Println("Answer:", ans)
 	}
@@ -46,7 +46,23 @@ func main() {
 
 func part1(input string) int {
   grid, start, end := parseInput(input)
+	//fmt.Println(len(grid), len(grid[Key{0,0}].canmove))
 	fillCanMove(grid)
+	
+	//fmt.Println(len(input))
+	
+
+	//   for i := 0; i < 41; i++ {
+	//   	fmt.Println("")
+	//   	for j := 0; j < 77; j++ {
+	//   		if grid[Key{j,i}].elevation < 10 {
+	//   		fmt.Print(grid[Key{j,i}].elevation, "  ")
+	//   		} else {
+	//   			fmt.Print(grid[Key{j,i}].elevation, " ")
+	//   		}
+	//  	}
+	//  }
+	//fmt.Println(grid)
 	ans, err := (findShortestPath(grid, start, end))
 	if err != nil {
 		//fmt.Println(grid[Key{7,37}], grid[Key{8,38}])
@@ -56,9 +72,20 @@ func part1(input string) int {
 	return ans
 }
 
-func part2(input string, links int) int {
-	ans := 0
-	return ans
+func part2(input string) int {
+	grid, starts, end := parseInput2(input)
+	fillCanMove(grid)
+	minSteps := math.MaxInt32
+	for _, start := range starts {
+    ans, err := (findShortestPath(grid, start, end))
+		if err != nil {
+			continue
+		}
+		if ans < minSteps {
+			minSteps = ans
+		}
+	}
+	return minSteps
 }
 
 type Point struct {
@@ -90,12 +117,44 @@ func parseInput(input string)(grid map[Key]Point, start Key, end Key){
 				  elevation = helpers.ToInt(char)
 			}
 			elevation = elevation - 'a'
-			//fmt.Println("Elevation:", elevation)
+			
 			grid[key] = Point{elevation: elevation}
+			//fmt.Println(r,c, grid[key])
 		}
 
 	}
 	return grid, start, end
+}
+
+func parseInput2(input string)(grid map[Key]Point, starts []Key, end Key){
+	grid = map[Key]Point{}
+	starts = []Key{}
+	end = Key{}
+	for r, line := range strings.Split(input, "\n") {
+		for c, char := range line {
+			key := Key{X: c, Y: r}
+			var elevation int
+			switch char {
+				case 'S':
+					elevation = 'a'
+					starts = append(starts,key)
+				case 'E':
+					elevation = 'z'
+					end = key
+				case 'a':
+					elevation = 'a'
+					starts = append(starts,key)
+				default: 
+				  elevation = helpers.ToInt(char)
+			}
+			elevation = elevation - 'a'
+			
+			grid[key] = Point{elevation: elevation}
+			//fmt.Println(r,c, grid[key])
+		}
+
+	}
+	return grid, starts, end
 }
 
 func fillCanMove(grid map[Key]Point) {
@@ -104,20 +163,23 @@ func fillCanMove(grid map[Key]Point) {
 		for offst := -1; offst <= 1 ; offst += 2 {
 			//fmt.Println("Key:", key, "Offset:", offst)
 			xdir, ok := grid[Key{X: key.X + offst, Y: key.Y}] 
-			if ok && xdir.elevation <= point.elevation+1 {
-				//fmt.Println("can move: xdir:", xdir.elevation, "ele:", point.elevation+1)
+			if (ok && xdir.elevation <= point.elevation+1) {
+				
+				//fmt.Println("Key:", key, "Point:", Key{X: key.X + offst, Y: key.Y} )
 				//grid[key].canmove = append(grid[key].canmove, Key{X: key.X + offst, Y: key.Y})
 				point.canmove = append(point.canmove, Key{X: key.X + offst, Y: key.Y})
 
 			}
 			ydir, ok := grid[Key{X: key.X, Y: key.Y + offst}]
-			if ok && ydir.elevation <= point.elevation+1 {
+			if (ok && ydir.elevation <= point.elevation+1) {
+				//fmt.Println("Key:", key, "Point:", Key{X: key.X, Y: key.Y + offst} )
 				//grid[key].canmove = append(grid[key].canmove, Key{X: key.X, Y: key.Y + offst})
 				point.canmove = append(point.canmove, Key{X: key.X, Y: key.Y + offst})
 			}
 		}
+		//fmt.Println(point)
 		grid[key] = point
-		//fmt.Println(grid[key])
+		//fmt.Println(grid[key].elevation)
 
 		//grid[key] = point
 	}
@@ -127,43 +189,52 @@ func fillCanMove(grid map[Key]Point) {
 // shortest path between two points in a grid.
 func findShortestPath(grid map[Key]Point, start Key, end Key) (int, error) {
 	// If the start and end points are the same, return a slice containing only the start point.
+	numSteps := 0
 	if start == end {
-			return 0, nil
+			return numSteps, nil
 	}
 
 	// Initialize a queue with a single path containing only the start point and a visited map 
 	// to keep track of the points that have been visited.
-	queue := [][]Key{{start}}
+	queue := []Key{start}
 	visited := map[Key]bool{start: true}
 
 	// Loop until the queue is empty.
 	for len(queue) > 0 {
+		// Create an empty slice to store the current path.
+		path := []Key{}
+
+		// Get the size of the queue.
+		queueSize := len(queue)
+
+		// Iterate over the queue.
+		for i := 0; i < queueSize; i++ {
 			// Dequeue the first path from the queue and retrieve the last point in the path.
-			path := queue[0]
+			current := queue[0]
 			queue = queue[1:]
-			last := path[len(path)-1]
+
+			// Append the current point to the path.
+			path = append(path, current)
 
 			// If the last point is the end point, return the length of the path.
-			if last == end {
-					return len(path) - 1, nil
+			if current == end {
+				//fmt.Println(path)
+				return numSteps, nil
 			}
 
 			// Iterate over the canmove field of the last point in the grid map.
-			for _, canmove := range grid[last].canmove {
-					// If the point has not been visited, add it to the visited map and create a 
-					// new path by appending the canmove point to the end of the current path. Add the new path to the end of the queue.
-					if !visited[canmove] {
-							visited[canmove] = true
-							newPath := append(path, canmove)
-							queue = append(queue, newPath)
-					}
+			for _, canmove := range grid[current].canmove {
+				// If the point has not been visited, add it to the visited map and create a 
+				// new path by appending the canmove point to the end of the current path. Add the new path to the end of the queue.
+				if visited[canmove] {
+					continue
+				}							
+				visited[canmove] = true
+				queue =  append(queue, canmove)
 			}
-
-			// Debugging print statements
-			//fmt.Println("Queue:", queue)
-			//fmt.Println("Visited:", visited)
-			//fmt.Println("Last:", last)
-			//fmt.Println("Canmove:", grid[last].canmove)
+		}
+		// Increment the number of steps taken.
+		numSteps++
 	}
 
 	// If the end point was not found, return an error.

@@ -1,0 +1,2 @@
+Part 1 Answer: 3106
+This Script took: 13.656074ms to complete!
