@@ -10,7 +10,7 @@ import (
 	"flag"
 	//"math"
 	"time"
-	//"sort"
+	"sort"
 	//"github.com/jonchen727/2022-AdventofCode/helpers"
 	"encoding/json"
 )
@@ -47,13 +47,31 @@ func main() {
 func part1(input string) int {
 	ans := 0
 	packets := parseInput(input)
-	ans = compareInputs(packets)
+	ans = indexSum(packets)
 	return ans
 }
 
 func part2(input string) int {
-	ans := 0
+	ans := 1
+	 packets := []string{"[2]","[6]"}
+	 pairs := parseInput(input)
+	 
+	 for _, pair := range pairs {
+		packets = append(packets, pair[0], pair[1])
+	 }
+	 sort.Slice(packets, func(i, j int) bool {
+		left, right := packets[i], packets[j]
+		return compare(left, right) == 1
+	 })
+
+	 for i, p := range packets {
+		if fmt.Sprint(p) == "[2]" || fmt.Sprint(p) == "[6]" {
+			ans *= i + 1
+		}
+	 }
 	return ans
+
+
 }
 
 func parseInput(input string) [][]string {
@@ -68,50 +86,27 @@ func parseInput(input string) [][]string {
 	return ans
 }
 
-func compareInputs(packets [][]string) int {
+func indexSum(packets [][]string) int {
 	total := 0
 	for i, p := range packets {
 		//fmt.Println("Packet", i+1)
 		pair1 := p[0]
 		pair2 := p[1]
-		//fmt.Println(pair1, pair2)
-		lb1 := strings.Count(pair1, "[")
-		lb2 := strings.Count(pair2, "[")
-		//fmt.Println(lb1, lb2)
-		chars1 := len(pair1) - lb1*2
-		chars2 := len(pair2) - lb2*2
-		//fmt.Println(chars1, chars2)
-		// handle empty or partial empty arrays 
-		if chars1 == 0 {
-			if lb2 > lb1 {
-				total += i + 1
-				continue 
-			}
-			if chars2 > chars1 {
-				total += i + 1
-				continue 
-			}
-			continue 
-		}
-		if chars2 == 0 {
-			continue 
-		}
-		sep1 := seperateArrays(pair1)
-		sep2 := seperateArrays(pair2)
-
-		// fmt.Println(sep1, sep2)
-		// skip if the first array is longer than the second since it 
-		// does not matter if its ordered the second pair will run out first
 		
-
-		if compare(sep1, sep2) != "Left is Less" {
-			continue
-		} else {
-			total += i + 1
+		//fmt.Println(compare(pair1, pair2))
+		var result bool
+		switch compare(pair1, pair2) {
+		case 0:
+			result = false
+		case 1:
+			result = true
 		}
-
+		if result {
+			total += i + 1
+		} else {
+			continue
+		}
 	}
-
 	  return total
 }
 
@@ -119,10 +114,23 @@ func compareInputs(packets [][]string) int {
 
 // compare is a function that compares two values, which can be either integers or lists of integers.
 // It returns a string indicating whether the left value is less than, greater than, or equal to the right value.
-func compare(left, right interface{}) string {
+func compare(arr1, arr2 interface{}) int {
+	var left, right interface{}
+	
+	switch arr1.(type) {
+	case string:
+		left = seperateArrays(arr1.(string))
+		right = seperateArrays(arr2.(string))
+	default:
+		left = arr1
+		right = arr2
+	}
+	
 	// Check if the left and right values are lists.
 	leftList, leftIsList := asList(left)
 	rightList, rightIsList := asList(right)
+
+	//fmt.Println(leftList, rightList)
 
 	// If both values are lists, compare them element by element.
 	if leftIsList && rightIsList {
@@ -146,7 +154,7 @@ func compare(left, right interface{}) string {
 
 // compareLists is a helper function for compare that compares two lists of integers.
 // It returns a string indicating whether the left list is less than, greater than, or equal to the right list.
-func compareLists(left, right []interface{}) string {
+func compareLists(left, right []interface{}) int{
 	// Find the minimum length of the two lists.
 	minLen := len(left)
 	if len(right) < minLen {
@@ -156,41 +164,41 @@ func compareLists(left, right []interface{}) string {
 	// Compare the elements of the two lists until a difference is found.
 	for i := 0; i < minLen; i++ {
 		result := compare(left[i], right[i])
-		if result != "Equal" {
+		if result >= 0 {
 			return result
 		}
 	}
 
 	// If the lists are equal up to the minimum length, the longer list is greater.
 	if len(left) < len(right) {
-		return "Left is Less"
+		return 1
 	} else if len(left) > len(right) {
-		return "Left is Greater"
+		return 0 
 	}
 
-	return "Equal"
+	return -1
 }
 
 // compareIntegers is a helper function for compare that compares two integers.
 // It returns a string indicating whether the left integer is less than, greater than, or equal to the right integer.
-func compareIntegers(left, right interface{}) string {
+func compareIntegers(left, right interface{}) int {
 	// Convert the left and right values to floats.
 	leftFloat, leftIsFloat := left.(float64)
 	rightFloat, rightIsFloat := right.(float64)
 
 	// If either value is not a float, return an error message.
 	if !leftIsFloat || !rightIsFloat {
-		return "Unable to compare"
+		return 0
 	}
 
 	// Compare the floats directly.
 	if leftFloat < rightFloat {
-		return "Left is Less"
+		return 1
 	} else if leftFloat > rightFloat {
-		return "Left is Greater"
+		return 0
 	}
 
-	return "Equal"
+	return -1
 }
 
 // asList is a helper function that converts a value to a list of interface{} values.
