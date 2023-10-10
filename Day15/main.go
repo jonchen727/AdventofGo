@@ -49,7 +49,8 @@ func part1(input string) int {
 }
 
 func part2(input string) int {
-	ans := 0
+	sensors, _, _, _ := parseInput(input)
+	ans := findTuningFrequency(sensors)
 	return ans
 }
 
@@ -73,14 +74,50 @@ func findNotBeaconLocations(sensors []Sensor, boundary Boundary, sensorMap map[s
 			}
 		}
 	}
-	 for i := -4 ; i < 27; i++ {
-	 	if _, ok := signalMap[fmt.Sprintf("%d,%d", i, y)]; ok {
-	 		fmt.Print("#")
-	 	} else {
-	 		fmt.Print(".")
-	 	}
-	 }
+	for i := -4; i < 27; i++ {
+		if _, ok := signalMap[fmt.Sprintf("%d,%d", i, y)]; ok {
+			fmt.Print("#")
+		} else {
+			fmt.Print(".")
+		}
+	}
 	return len(signalMap)
+}
+
+func findTuningFrequency(sensors []Sensor) int {
+	for _, s := range sensors {
+		offset := s.distance + 1
+		for r := -offset; r <= offset; r++ {
+			ty := s.sensor.y + r
+			if ty < 0 {
+				continue
+			}
+			if ty > 4000000 {
+				break
+			}
+
+			xoff := offset - helpers.Abs(r)
+			xmin := s.sensor.x - xoff
+			xmax := s.sensor.x + xoff
+
+			if xmin >= 0 && xmin <= 4000000 && !isReachable(sensors, xmin, ty) {
+				return xmin*4000000 + ty
+			}
+			if xmax >= 0 && xmax <= 4000000 && !isReachable(sensors, xmax, ty) {
+				return xmax*4000000 + ty
+			}
+		}
+	}
+	return 0
+}
+
+func isReachable(sensors []Sensor, x, y int) bool {
+	for _, s := range sensors {
+		if s.distance >= helpers.Abs(s.sensor.x-x)+helpers.Abs(s.sensor.y-y) {
+			return true
+		}
+	}
+	return false
 }
 
 type Point struct {
