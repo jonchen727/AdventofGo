@@ -53,7 +53,7 @@ func part1(input string) int {
 func part2(input string) int {
 	ans := 0
 	jets := parseInput(input)
-	ans = simulateBlocks(jets, 1000000000000 )
+	ans = simulateBlocks(jets, 1000000000000)
 	return ans
 }
 
@@ -114,7 +114,6 @@ func simulateBlocks(jets []complex128, step int) int {
 			jet := jets[jetidx]
 			moved = moveRock(rock, jet)
 
-
 			cond1 := true
 			for _, val := range moved {
 				if real(val) >= 0 && real(val) < 7 {
@@ -128,7 +127,7 @@ func simulateBlocks(jets []complex128, step int) int {
 			moved = moveRock(rock, (complex(float64(0), float64(-1))))
 			if Intersection(moved, solid) {
 				var summary string
-				o := height 
+				o := height
 				solid, height, summary = Union(solid, rock)
 				rockCount++
 				a = append(a, height-o)
@@ -140,7 +139,6 @@ func simulateBlocks(jets []complex128, step int) int {
 
 				key := fmt.Sprintf("%d, %d, %s", jetidx, rockIndex, summary)
 				//fmt.Println(key)
-
 
 				if _, ok := seen[key]; ok {
 					fmt.Println("cache hit")
@@ -165,11 +163,10 @@ func simulateBlocks(jets []complex128, step int) int {
 	return height + offset
 }
 
-
 func Union(arr1 []complex128, arr2 []complex128) ([]complex128, int, string) {
 	union := map[complex128]bool{}
 	maxheight := float64(0)
-  topState := []int{}
+	topState := []int{}
 	for i := 0; i < 7; i++ {
 		topState = append(topState, -20)
 	}
@@ -199,7 +196,7 @@ func Union(arr1 []complex128, arr2 []complex128) ([]complex128, int, string) {
 	}
 
 	//fmt.Println(maxheight)
-	return unionArr, int(maxheight)+1, summary //, int(maxheight)+1
+	return unionArr, int(maxheight) + 1, summary //, int(maxheight)+1
 
 }
 
