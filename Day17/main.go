@@ -11,7 +11,7 @@ import (
 	//"math"
 	"time"
 	//"sort"
-	//"github.com/jonchen727/2022-AdventofCode/helpers"
+	"github.com/jonchen727/2022-AdventofCode/helpers"
 )
 
 //go:embed input.txt
@@ -52,6 +52,8 @@ func part1(input string) int {
 
 func part2(input string) int {
 	ans := 0
+	jets := parseInput(input)
+	ans = simulateBlocks(jets, 1000000000000 )
 	return ans
 }
 
@@ -97,14 +99,21 @@ func simulateBlocks(jets []complex128, step int) int {
 	height := 0
 	rock := moveRock(rocks[rockIndex], complex(float64(2), float64(height+3)))
 	jetidx := 0
+	jetcount := 0
+	offset := 0
+	a := []int{}
+	seen := map[string][]int{}
 
 	for rockCount < step {
 
 		moved := []complex128{}
 		for true {
-			jet := jets[jetidx%(len(jets))]
+
+			jetidx = (jetcount) % len(jets)
+			//fmt.Println(jetidx, rockIndex)
+			jet := jets[jetidx]
 			moved = moveRock(rock, jet)
-			jetidx++
+
 
 			cond1 := true
 			for _, val := range moved {
@@ -118,36 +127,52 @@ func simulateBlocks(jets []complex128, step int) int {
 			}
 			moved = moveRock(rock, (complex(float64(0), float64(-1))))
 			if Intersection(moved, solid) {
-
-				solid, height = Union(solid, rock)
-
+				var summary string
+				o := height 
+				solid, height, summary = Union(solid, rock)
 				rockCount++
-				//maxheight := float64(0)
-				// for _, val := range solid {
-				// 	if imag(val) >= maxheight {
-				// 		maxheight = imag(val)+1
-				// 	}
-				// }
-				// height = int(maxheight)
+				a = append(a, height-o)
 				if rockCount >= step {
 					break
 				}
 				rockIndex = (rockIndex + 1) % len(rocks)
 				rock = moveRock(rocks[rockIndex], complex(float64(2), float64(height+3)))
+
+				key := fmt.Sprintf("%d, %d, %s", jetidx, rockIndex, summary)
+				//fmt.Println(key)
+
+
+				if _, ok := seen[key]; ok {
+					fmt.Println("cache hit")
+					lastrockCount, lastHeight := seen[key][0], seen[key][1]
+					rem := step - rockCount
+					rep := rem / (rockCount - lastrockCount)
+					offset = rep * (height - lastHeight)
+					rockCount += rep * (rockCount - lastrockCount)
+					seen = map[string][]int{}
+				}
+				seen[key] = []int{rockCount, height}
+
 			} else {
 				rock = moved
 			}
+			jetcount++
 		}
 
 		//fmt.Println(solid)
 	}
 	//fmt.Println(solid)
-	return height
+	return height + offset
 }
 
-func Union(arr1 []complex128, arr2 []complex128) ([]complex128, int) {
+
+func Union(arr1 []complex128, arr2 []complex128) ([]complex128, int, string) {
 	union := map[complex128]bool{}
 	maxheight := float64(0)
+  topState := []int{}
+	for i := 0; i < 7; i++ {
+		topState = append(topState, -20)
+	}
 	for _, val := range arr1 {
 		union[val] = true
 	}
@@ -156,14 +181,25 @@ func Union(arr1 []complex128, arr2 []complex128) ([]complex128, int) {
 	}
 
 	unionArr := []complex128{}
-	for key := range union {
+	for key, _ := range union {
+		real := real(key)
+		imag := imag(key)
+		topState[int(real)] = helpers.MaxInt(topState[int(real)], int(imag))
 		unionArr = append(unionArr, key)
-		if imag(key) >= maxheight {
-			maxheight = imag(key)
+		if imag >= maxheight {
+			maxheight = imag
 		}
 	}
+	top := helpers.MaxInt(topState...)
+
+	var summary string
+	for i, col := range topState {
+		topState[i] = col - top
+		summary += fmt.Sprintf("%d,", col-top)
+	}
+
 	//fmt.Println(maxheight)
-	return unionArr, int(maxheight) + 1 //, int(maxheight)+1
+	return unionArr, int(maxheight)+1, summary //, int(maxheight)+1
 
 }
 
