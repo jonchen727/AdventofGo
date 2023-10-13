@@ -1,8 +1,7 @@
 package main
 
 import (
-	//"github.com/jonchen727/2022-AdventofCode/helpers"
-	//"container/heap"
+	"github.com/jonchen727/2022-AdventofCode/helpers"
 	_ "embed"
 	"flag"
 	"fmt"
@@ -39,80 +38,124 @@ func main() {
 	fmt.Println("This Script took:", duration, "to complete!")
 }
 
+// part1 is a function that takes a string input and returns an integer.
+// It parses the input, generates a distance map, generates a list of all node names,
+// and finds the maximum flow between nodes.
 func part1(input string) int {
 	ans := 0
 	valves := parseInput(input)
-	distMap := generateDistanceMap(valves)
-	
+	distMap, nonempty := generateDistanceMap(valves)
+	indicies := generateIndecies(nonempty)
+	cache := map[string]int{}
+	ans = findMaxFlow(valves, distMap, "AA", 30, indicies, 0, cache)
+	//fmt.Println(distMap)
+
 	return ans
 }
 
+// part2 is a function that takes a string input and returns an integer.
+// It currently does not have any implementation.
 func part2(input string) int {
 	ans := 0
 
 	return ans
 }
-func generateDistanceMap(nodes map[string]*Node) map[string]map[string]int {
-	// generate a list of all node names
-	valveList := []string{}
-	for _, node := range nodes {
-		valveList = append(valveList, node.name)
-	}
 
-	slices.Sort(valveList)
-	fmt.Println(valveList)
-	distList := make(map[string]map[string]int)
-	for _, node := range valveList {
-		if nodes[node].value != 0 || node == "AA" {
-		distList[node] = make(map[string]int)
-		}
+// generateIndecies is a function that takes a slice of strings and returns a map of strings to integers.
+// It generates a map of node names to their corresponding index in the slice.
+func generateIndecies(nonempty []string) map[string]int {
+	indicies := map[string]int{}
+	for i, valve := range nonempty {
+		indicies[valve] = i
 	}
-
-	// generate a map of all distances
-	for node, _ := range distList {
-		for node2, _ := range distList {
-			if node != node2 {
-					if _, ok := distList[node][node2]; !ok {
-					distList[node][node2] = findDistance(nodes, node, node2)
-					}
-				}
-			
-		}
-	}
-	return distList
+	return indicies
 }
-func findDistance(nodes map[string]*Node, start string, end string) int {
-	queue := []string{start}
-	visited := map[string]bool{start: true}
-	dist := map[string]int{start: 0}
-	for len(queue) > 0 {
-		node := queue[0]
-		queue = queue[1:]
-		if node == end {
-			//fmt.Println("Found", start, end, dist)
-			return dist[node]
+
+// generateDistanceMap is a function that takes a map of nodes and returns a map of distances between nodes and a list of all node names.
+// It uses breadth-first search to calculate the shortest distance between nodes.
+func generateDistanceMap(nodes map[string]*Node) (map[string]map[string]int, []string) {
+	valveList := []string{}
+
+	slices.Sort(valveList) // sorts the valveList slice
+	//fmt.Println(valveList)
+	distMap := make(map[string]map[string]int)
+
+	for _, node := range nodes {
+		if node.name != "AA" && node.value == 0 {
+			continue
 		}
-		for _, next := range nodes[node].next {
-			//fmt.Println(start, end, next.name)
-			if _, ok := visited[next.name]; !ok {
-				visited[next.name] = true
-				queue = append(queue, next.name)
-				dist[next.name] = dist[node] + 1
-			} else {
-				continue
+		if node.name != "AA" {
+			valveList = append(valveList, node.name)
+		}
+		distMap[node.name] = make(map[string]int)
+		type Valve struct {
+			node *Node
+			dist int
+		}
+		queue := []Valve{{nodes[node.name], 0}}
+		distMap[node.name] = map[string]int{node.name: 0, "AA": 0}
+		visited := map[string]bool{node.name: true}
+
+		for len(queue) > 0 {
+			current := queue[0]
+			queue = queue[1:]
+			for _, next := range current.node.next {
+				if _, ok := visited[next.name]; !ok {
+					visited[next.name] = true
+					if next.value != 0 {
+						distMap[node.name][next.name] = current.dist + 1
+					}
+					queue = append(queue, Valve{next, current.dist + 1})
+				} else {
+					continue
+				}
 			}
 		}
-
+		delete(distMap[node.name], node.name)
+		if node.name != "AA" {
+			delete(distMap[node.name], "AA")
+		}
 	}
-	return 0
+	//fmt.Println(len(distMap))
+	return distMap, valveList
 }
 
+// findMaxFlow is a function that takes a map of nodes, a map of distances between nodes, a starting node, a time limit, a map of node names to their corresponding index in the slice, a bitmask, and a cache.
+// It returns the maximum flow between nodes.
+func findMaxFlow(valves map[string]*Node, distmap map[string]map[string]int, start string, time int, indicies map[string]int, bitmask int, cache map[string]int) int {
+	cachekey := fmt.Sprintf("%d,%s,%d", time, start, bitmask)
+	//utilizes a cache using bitmap representation of valves that are on to speed up the process
+	if val, ok := cache[cachekey]; ok {
+		return val
+	}
+	maxflow := 0
+	for next, dist := range distmap[start] {
+		
+		bit := 1 << indicies[next]
+		//fmt.Println(next, dist)
+		if bitmask&bit != 0 {
+			continue
+		}
+		remtime := time - dist - 1
+		if remtime <= 0 {
+			continue
+		}
+		//fmt.Println(bitmask, remtime, next, dist, maxflow)
+		maxflow = helpers.MaxInt(maxflow, findMaxFlow(valves, distmap, next, remtime, indicies, (bitmask|bit), cache)+(valves[next].value*remtime))
+	}
+	cache[cachekey] = maxflow
+	return maxflow
+}
+
+// Node is a struct that represents a node in a graph.
 type Node struct {
 	name  string
 	value int
 	next  map[string]*Node
 }
 
+// parseInput is a function that takes a string input and returns a map of nodes.
+// It parses the input and generates a map of nodes.
 func parseInput(input string) map[string]*Node {
 	nodes := map[string]*Node{}
 	for _, line := range strings.Split(input, "\n") {
@@ -131,7 +174,6 @@ func parseInput(input string) map[string]*Node {
 		nextStr := strings.Split(replaced, "valve ")[1]
 		// if the next node doesn't exist, create it
 		for _, next := range strings.Split(nextStr, ", ") {
-			//nxt := nodes[next]
 			nodes[name].next[next] = nodes[next]
 		}
 	}
