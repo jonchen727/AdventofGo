@@ -57,6 +57,14 @@ func part1(input string) int {
 // It currently does not have any implementation.
 func part2(input string) int {
 	ans := 0
+	valves := parseInput(input)
+	distMap, nonempty := generateDistanceMap(valves)
+	indicies := generateIndecies(nonempty)
+	cache := map[string]int{}
+	b := (1<<len(nonempty))-1
+	for i := 0; i <= b/2 ; i++ {
+		ans = helpers.MaxInt(ans, findMaxFlow(valves, distMap, "AA", 26, indicies, i, cache) +  findMaxFlow(valves, distMap, "AA", 26, indicies, b ^ i, cache))
+	}
 
 	return ans
 }
@@ -123,6 +131,7 @@ func generateDistanceMap(nodes map[string]*Node) (map[string]map[string]int, []s
 // findMaxFlow is a function that takes a map of nodes, a map of distances between nodes, a starting node, a time limit, a map of node names to their corresponding index in the slice, a bitmask, and a cache.
 // It returns the maximum flow between nodes.
 func findMaxFlow(valves map[string]*Node, distmap map[string]map[string]int, start string, time int, indicies map[string]int, bitmask int, cache map[string]int) int {
+	
 	cachekey := fmt.Sprintf("%d,%s,%d", time, start, bitmask)
 	//utilizes a cache using bitmap representation of valves that are on to speed up the process
 	if val, ok := cache[cachekey]; ok {
