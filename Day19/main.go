@@ -66,9 +66,7 @@ func getMaxGeode(blueprint Blueprint, duration int, maxSpend []int) int {
 	visited := map[string]bool{}
 	for len(queue) > 0 {
 		currentState := queue[0]
-
 		queue = queue[1:]
-
 		if currentState.Time == duration {
 			continue
 		}
@@ -99,16 +97,23 @@ func generateStates(blueprint Blueprint, current State, maxSpend []int) []State 
 	rmaxGeode = helpers.MinInt(rmaxGeode, 1)
 	for rGeode := 0; rGeode <= rmaxGeode; rGeode++ {
 		ore1, clay1, obsidian1 := updateResources(blueprint.Geode, ore, clay, obsidian, rGeode)
-		rmaxObsidian := calculateMaxRobots(blueprint.Obsidian, ore1, clay1, obsidian1)
-		rmaxObsidian = helpers.MinInt(rmaxObsidian, 1)
+		rmaxObsidian := 0
+		if current.ObsidianRobot <= maxSpend[2] {
+			rmaxObsidian = calculateMaxRobots(blueprint.Obsidian, ore1, clay1, obsidian1)
+			rmaxObsidian = helpers.MinInt(rmaxObsidian, 1)
+		}
 		for rObsidian := 0; rObsidian <= rmaxObsidian; rObsidian++ {
 			ore2, clay2, obsidian2 := updateResources(blueprint.Obsidian, ore1, clay1, obsidian1, rObsidian)
-			rmaxClay := calculateMaxRobots(blueprint.Clay, ore2, clay2, obsidian2)
-			rmaxClay = helpers.MinInt(rmaxClay, 1)
+			rmaxClay := 0
+
+			if current.ClayRobot <= maxSpend[1] {
+				rmaxClay = calculateMaxRobots(blueprint.Clay, ore2, clay2, obsidian2)
+				rmaxClay = helpers.MinInt(rmaxClay, 1)
+			}
 			for rClay := 0; rClay <= rmaxClay; rClay++ {
 				ore3, clay3, obsidian3 := updateResources(blueprint.Clay, ore2, clay2, obsidian2, rClay)
 				rmaxOre := 0
-				if current.OreRobot < maxSpend[0] {
+				if current.OreRobot <= maxSpend[0] {
 					rmaxOre = calculateMaxRobots(blueprint.Ore, ore3, clay3, obsidian3)
 					rmaxOre = helpers.MinInt(rmaxOre, 1)
 				}
@@ -118,6 +123,9 @@ func generateStates(blueprint Blueprint, current State, maxSpend []int) []State 
 					clay4 = helpers.MinInt(clay4, maxSpend[1])
 					obsidian4 = helpers.MinInt(obsidian4, maxSpend[2])
 					newState := State{current.Time + 1, current.OreRobot + rOre, current.ClayRobot + rClay, current.ObsidianRobot + rObsidian, current.GeodeRobot + rGeode, current.OreRobot + ore4, current.ClayRobot + clay4, current.ObsidianRobot + obsidian4, current.GeodeRobot + current.Geode}
+					// if newState.Geode > 12 {
+					// 	fmt.Println(newState)
+					// }
 					states = append(states, newState)
 				}
 			}
