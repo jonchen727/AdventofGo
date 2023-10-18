@@ -51,12 +51,17 @@ func part1(input string) int {
 		maxGeodes := getMaxGeode(blueprint, 24, maxSpend)
 		ans += maxGeodes * blueprint.Number
 	}
-
 	return ans
 }
 
 func part2(input string) int {
-	ans := 0
+	ans := 1
+	blueprints := parseInput(input)
+	for i := 0; i <= 2; i++ {
+		maxSpend := getMaxSpend(blueprints[i])
+		maxGeodes := getMaxGeode(blueprints[i], 32, maxSpend)
+		ans *= maxGeodes
+	}
 	return ans
 }
 
@@ -67,6 +72,7 @@ func getMaxGeode(blueprint Blueprint, duration int, maxSpend []int) int {
 	for len(queue) > 0 {
 		currentState := queue[0]
 		queue = queue[1:]
+		//fmt.Println(currentState)
 		if currentState.Time == duration {
 			continue
 		}
@@ -74,7 +80,7 @@ func getMaxGeode(blueprint Blueprint, duration int, maxSpend []int) int {
 		newStates := generateStates(blueprint, currentState, maxSpend)
 		for _, state := range newStates {
 			key := fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d", state.Time, state.OreRobot, state.ClayRobot, state.ObsidianRobot, state.GeodeRobot, state.Ore, state.Clay, state.Obsidian, state.Geode)
-			if state.Geode < maxGeode {
+			if state.Geode < maxGeode-1 {
 				continue
 			}
 			if _, ok := visited[key]; !ok {
@@ -92,7 +98,6 @@ func generateStates(blueprint Blueprint, current State, maxSpend []int) []State 
 	ore := current.Ore
 	clay := current.Clay
 	obsidian := current.Obsidian
-
 
 	rmaxGeode := calculateMaxRobots(blueprint.Geode, ore, clay, obsidian)
 	rmaxGeode = helpers.MinInt(rmaxGeode, 1)
@@ -120,10 +125,10 @@ func generateStates(blueprint Blueprint, current State, maxSpend []int) []State 
 				}
 				for rOre := 0; rOre <= rmaxOre; rOre++ {
 					ore4, clay4, obsidian4 := updateResources(blueprint.Ore, ore3, clay3, obsidian3, rOre)
-					ore4 = helpers.MinInt(ore4, maxSpend[0])
-					clay4 = helpers.MinInt(clay4, maxSpend[1])
-					obsidian4 = helpers.MinInt(obsidian4, maxSpend[2])
-					if rOre + rClay + rObsidian + rGeode > 1 {
+					ore4 = helpers.MinInt(ore4, maxSpend[0]+1)
+					clay4 = helpers.MinInt(clay4, maxSpend[1]+1)
+					obsidian4 = helpers.MinInt(obsidian4, maxSpend[2]+1)
+					if rOre+rClay+rObsidian+rGeode > 1 {
 						continue
 					}
 					newState := State{current.Time + 1, current.OreRobot + rOre, current.ClayRobot + rClay, current.ObsidianRobot + rObsidian, current.GeodeRobot + rGeode, current.OreRobot + ore4, current.ClayRobot + clay4, current.ObsidianRobot + obsidian4, current.GeodeRobot + current.Geode}
