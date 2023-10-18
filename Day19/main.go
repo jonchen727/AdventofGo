@@ -93,6 +93,7 @@ func generateStates(blueprint Blueprint, current State, maxSpend []int) []State 
 	clay := current.Clay
 	obsidian := current.Obsidian
 
+
 	rmaxGeode := calculateMaxRobots(blueprint.Geode, ore, clay, obsidian)
 	rmaxGeode = helpers.MinInt(rmaxGeode, 1)
 	for rGeode := 0; rGeode <= rmaxGeode; rGeode++ {
@@ -122,6 +123,9 @@ func generateStates(blueprint Blueprint, current State, maxSpend []int) []State 
 					ore4 = helpers.MinInt(ore4, maxSpend[0])
 					clay4 = helpers.MinInt(clay4, maxSpend[1])
 					obsidian4 = helpers.MinInt(obsidian4, maxSpend[2])
+					if rOre + rClay + rObsidian + rGeode > 1 {
+						continue
+					}
 					newState := State{current.Time + 1, current.OreRobot + rOre, current.ClayRobot + rClay, current.ObsidianRobot + rObsidian, current.GeodeRobot + rGeode, current.OreRobot + ore4, current.ClayRobot + clay4, current.ObsidianRobot + obsidian4, current.GeodeRobot + current.Geode}
 					// if newState.Geode > 12 {
 					// 	fmt.Println(newState)
