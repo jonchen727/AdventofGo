@@ -35,6 +35,8 @@ func ToInt(arg interface{}) int {
 		}
 	case rune:
 		val = int(arg.(rune))
+	case float64:
+		val = int(arg.(float64))
 	default:
 	  panic(fmt.Sprintf("unhandled type %T", arg))
 	}
