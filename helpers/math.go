@@ -1,4 +1,5 @@
 package helpers
+
 import "reflect"
 
 func MaxInt(nums ...int) int {
@@ -36,8 +37,14 @@ func Abs(num int) int {
 	return num
 }
 
-
-
 func DeepEqual(a1, a2 interface{}) bool {
-    return reflect.DeepEqual(a1, a2)
+	return reflect.DeepEqual(a1, a2)
+}
+
+func posMod(d, m int) int {
+	var res int = d % m
+	if res < 0 && m > 0 {
+		return res + m
+	}
+	return res
 }
