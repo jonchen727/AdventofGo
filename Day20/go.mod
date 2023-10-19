@@ -1,4 +1,4 @@
-module github.com/jonchen727/2022-AdventofCode/Day19
+module github.com/jonchen727/2022-AdventofCode/Day20
 
 go 1.21.1
 
