@@ -51,19 +51,24 @@ type Monkey struct {
 	op string
 }
 
-func (m Monkey) getValue(monkeys map[string]Monkey) int {
+func (m Monkey) getValue() int {
+	fmt.Println(m)
 	if m.value != 0 {
 		return m.value
 	}
 	switch m.op {
 	case "+":
-		return m.monkey1.getValue(monkeys) + m.monkey2.getValue(monkeys)
+		m.value = m.monkey1.getValue() + m.monkey2.getValue()
+		return m.value
 	case "*":
-		return m.monkey1.getValue(monkeys) * m.monkey2.getValue(monkeys)
+		m.value = m.monkey1.getValue() * m.monkey2.getValue()
+		return m.value
 	case "/":
-		return m.monkey1.getValue(monkeys) / m.monkey2.getValue(monkeys)
+		m.value = m.monkey1.getValue() / m.monkey2.getValue()
+		return m.value
 	case "-":
-		return m.monkey1.getValue(monkeys) - m.monkey2.getValue(monkeys)
+		m.value = m.monkey1.getValue() - m.monkey2.getValue()
+		return m.value
 	default:
 		return m.value
 	}
@@ -76,7 +81,7 @@ func part1(input string) int {
 		fmt.Println("Root node not found.")
 		panic("Root node not found.")
 	}
-	ans := root.getValue(monkeys)
+	ans := root.getValue()
 	return ans
 }
 
@@ -85,8 +90,8 @@ func part2(input string) int {
 	return ans
 }
 
-func parseInput(input string) map[string]Monkey {
-	monkeys := make(map[string]Monkey)
+func parseInput(input string) map[string]*Monkey {
+	monkeys := make(map[string]*Monkey)
 	tmp := make(map[string][]string)
 	for _, line := range strings.Split(input, "\n") {
 		split := strings.Split(line, ": ")
@@ -94,10 +99,10 @@ func parseInput(input string) map[string]Monkey {
 		data := strings.Split(split[1], " ")
 		if len(data) == 1 {
 			m := Monkey{name: name, value: helpers.ToInt(data[0])}
-			monkeys[name] = m
+			monkeys[name] = &m
 		} else {
 			tmp[name] = data
-			monkeys[name] = Monkey{name: name}
+			monkeys[name] = &Monkey{name: name}
 		}
 	}
 
@@ -106,8 +111,8 @@ func parseInput(input string) map[string]Monkey {
 		monkey1 := monkeys[v[0]]
 		monkey2 := monkeys[v[2]]
 		op := v[1]
-		monkey.monkey1 = &monkey1
-		monkey.monkey2 = &monkey2
+		monkey.monkey1 = monkey1
+		monkey.monkey2 = monkey2
 		monkey.op = op
 		monkeys[k] = monkey
 	}
