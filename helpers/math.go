@@ -30,6 +30,26 @@ func MinInt(nums ...int) int {
 	return minNum
 }
 
+func MinFloat(nums ...float64) float64 {
+	minNum := nums[0]
+	for _, num := range nums {
+		if num < minNum {
+			minNum = num
+		}
+	}
+	return minNum
+}
+
+func MaxFloat(nums ...float64) float64 {
+	maxNum := nums[0]
+	for _, num := range nums {
+		if num > maxNum {
+			maxNum = num
+		}
+	}
+	return maxNum
+}
+
 func Abs(num int) int {
 	if num < 0 {
 		return -num
