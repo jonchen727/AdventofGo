@@ -63,6 +63,27 @@ func part1(input string) int {
 	}
 	return ans
 }
+func part2(input string) int {
+	ans := 0
+	nodes, zeronode := parseInput(input)
+	for i := 0; i < len(nodes); i++ {
+		nodes[i].value *= 811589153
+	}
+	for i := 0; i < 10; i++ {
+		for i := 0; i < len(nodes); i++ {
+			nodes[i].move(len(nodes))
+		}
+	}
+
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 1000; j++ {
+			zeronode = zeronode.right
+		}
+		ans += zeronode.value
+	}
+
+	return ans
+}
 
 func (node *Node) move(totalLen int) {
 	steps := node.value
@@ -108,11 +129,6 @@ func (node *Node) move(totalLen int) {
 	nextright.left = node
 	// update self to point to right neighbor
 	node.right = nextright
-}
-
-func part2(input string) int {
-	ans := 0
-	return ans
 }
 
 type Node struct {
