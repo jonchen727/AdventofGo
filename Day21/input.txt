@@ -282,7 +282,7 @@ ngjh: rlvp * zhrd
 wjrp: 2
 zltv: 19
 nbjn: 2
-root: fzvp / grlb
+root: fzvp + grlb
 dssw: fvfp + glvn
 vqgg: nfsh - vshw
 nfsh: tgrl * pfzp
@@ -1643,7 +1643,7 @@ rbpg: lpjc + fjrh
 lbzz: mjjj + bwlt
 blwd: rdzp * smgf
 rpfh: 2
-humn: 3699945358232
+humn: 409
 gtvz: 2
 cmhf: twld + gczz
 vfdv: gjzh * pzbn
