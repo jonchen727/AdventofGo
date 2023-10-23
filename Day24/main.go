@@ -47,6 +47,26 @@ type State struct {
 	y, x, turn int
 }
 
+func buildCache(blizzardMap map[string][]string, bounds Bounds) (map[int]map[string][]string, int) {
+	cache := map[int]map[string][]string{}
+	cache[0] = blizzardMap
+	mod := 0
+	turn := 0
+	for true {
+		turn++
+		newBlizzardMap := moveBlizzard(blizzardMap, bounds)
+		cache[turn] = newBlizzardMap
+		//fmt.Println("%v", newBlizzardMap)
+		if fmt.Sprintf("%v", cache[1]) == fmt.Sprintf("%v", newBlizzardMap) && turn != 1 {
+			fmt.Println("dupe found")
+			mod = turn - 1
+			break
+		}
+		blizzardMap = newBlizzardMap
+
+	}
+	return cache, mod
+}
 func part1(input string) int {
 	ans := 0
 	bounds, start, end, blizzardMap := parseInput(input)
@@ -171,7 +191,85 @@ out:
 	//fmt.Println(blizzardMap)
 	return ans
 }
+func findPath(start []int, end []int, cache map[int]map[string][]string, bounds Bounds, mod int, time int) int {
+	ans := 0
+	queue := []State{State{start[0], start[1], time}}
+	seen := map[string]int{}
+out:
+	for true {
+		//fmt.Println(queue)
+		current := queue[0]
+		//fmt.Println(current.turn)
+		//blizzardMap := cache[current.turn%mod]
+		if current.x > bounds.right || current.x < bounds.left || current.y >= bounds.bottom || current.y <= bounds.top {
+			fmt.Println("out of bounds")
+			fmt.Println(current)
+		}
+		queue = queue[1:]
 
+		if current.y == end[0] && current.x == end[1] {
+			fmt.Println("found")
+			break out
+		}
+
+		nextBlizzardMap := cache[(current.turn+1)%mod]
+		//fmt.Println(seen)
+		for x := -1; x <= 1; x++ {
+			// fmt.Println(current.y, current.x+x)
+			if current.x+x > 0 && current.x+x < bounds.right && current.y > 0 && current.y < bounds.bottom {
+				//_, ok1 := blizzardMap[fmt.Sprintf("%d,%d", current.y, current.x)]
+				_, ok2 := nextBlizzardMap[fmt.Sprintf("%d,%d", current.y, current.x+x)]
+				if !ok2 {
+
+					if s, ok := seen[fmt.Sprintf("%d,%d,%d", current.y, current.x+x, current.turn)]; !ok {
+						queue = append(queue, State{current.y, current.x + x, current.turn + 1})
+						seen[fmt.Sprintf("%d,%d,%d", current.y, current.x+x, current.turn)] = 1
+					} else {
+						if s > 5 {
+							//fmt.Println("seen too manytimes")
+							continue
+						} else {
+							queue = append(queue, State{current.y, current.x + x, current.turn + 1})
+							seen[fmt.Sprintf("%d,%d,%d", current.y, current.x+x, current.turn)] = s + 1
+						}
+					}
+				}
+			}
+		}
+		for y := -1; y <= 1; y++ {
+			// fmt.Println(current.y+y,current.x)
+			if current.y+y == end[0] && current.x == end[1] {
+				fmt.Println("found")
+				ans = current.turn
+				break out
+			}
+			if (current.y+y > bounds.top && current.y+y < bounds.bottom) || (current.y+y == start[0] && current.x == start[1]) {
+				//_, ok1 := blizzardMap[fmt.Sprintf("%d,%d", current.y, current.x)]
+				_, ok2 := nextBlizzardMap[fmt.Sprintf("%d,%d", current.y+y, current.x)]
+				if !ok2 {
+
+					if s, ok := seen[fmt.Sprintf("%d,%d,%d", current.y+y, current.x, current.turn)]; !ok {
+						queue = append(queue, State{current.y + y, current.x, current.turn + 1})
+						seen[fmt.Sprintf("%d,%d,%d", current.y+y, current.x, current.turn)] = 1
+					} else {
+						if s > 5 {
+							//fmt.Println("seen too manytimes")
+							continue
+
+						} else {
+							queue = append(queue, State{current.y + y, current.x, current.turn + 1})
+							seen[fmt.Sprintf("%d,%d,%d", current.y+y, current.x, current.turn)] = s + 1
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+	//fmt.Println(blizzardMap)
+	return ans
+}
 func moveBlizzard(blizzardMap map[string][]string, bounds Bounds) map[string][]string {
 	newBlizzardMap := map[string][]string{}
 	// fmt.Println(turns)
@@ -221,6 +319,14 @@ func moveBlizzard(blizzardMap map[string][]string, bounds Bounds) map[string][]s
 
 func part2(input string) int {
 	ans := 0
+	bounds, start, end, blizzardMap := parseInput(input)
+	cache, mod := buildCache(blizzardMap, bounds)
+	t1 := findPath(start, end, cache, bounds, mod, 0)
+	fmt.Println(t1)
+	t2 := findPath(end, start, cache, bounds, mod, t1+1)
+	fmt.Println(t1, t2)
+	t3 := findPath(start, end, cache, bounds, mod, t2+1)
+	fmt.Println(t1, t2, t3)
 	return ans
 }
 
