@@ -11,7 +11,7 @@ import (
 	//"math"
 	"time"
 	//"sort"
-	//"github.com/jonchen727/AdventofGo/helpers"
+	"github.com/jonchen727/AdventofGo/helpers"
 )
 
 //go:embed input.txt
@@ -43,47 +43,41 @@ func main() {
 	fmt.Println("This Script took:", duration, "to complete!")
 }
 
-func part1(input string) string {
+func part1(input string) int {
+	ans := 0
+	stuff := parseInput(input)
+	for i := 0; i < len(stuff); i++ {
+		for j := i + 1; j < len(stuff); j++ {
+			if stuff[i]+stuff[j] == 2020 {
+				ans = stuff[i] * stuff[j]
+				break
+			}
+		}
+	}
 
-	arr := parseInput(input)
-	total := convertAndAdd(arr)
-	ans := convertToSnafu(total)
 	return ans
 }
 
 func part2(input string) int {
 	ans := 0
-	return ans
-}
-
-func parseInput(input string) []string {
-	return strings.Split(input, "\n")
-}
-
-func convertAndAdd(input []string) int {
-	total := 0
-	for _, line := range input {
-		coef := 1
-		for i := len(line) - 1; i >= 0; i-- {
-			x := line[i]
-			total += (strings.Index("=-012", string(x)) - 2) * coef
-			coef *= 5
-		}
-	}
-	return total
-}
-
-func convertToSnafu(num int) string {
-	var ans string
-	for num != 0 {
-		remainder := num % 5
-		num /= 5
-		if remainder <= 2 {
-			ans = fmt.Sprintf("%d%s", remainder, ans)
-		} else {
-			ans = fmt.Sprintf("%c%s", "   =-"[remainder], ans)
-			num++
+	stuff := parseInput(input)
+	for i := 0; i < len(stuff); i++ {
+		for j := i + 1; j < len(stuff); j++ {
+			for k := j + 1; k < len(stuff); k++ {
+				if stuff[i]+stuff[j]+stuff[k] == 2020 {
+					ans = stuff[i] * stuff[j] * stuff[k]
+					break
+				}
+			}
 		}
 	}
 	return ans
+}
+
+func parseInput(input string) []int {
+	stuff := []int{}
+	for _, line := range strings.Split(input, "\n") {
+		stuff = append(stuff, helpers.ToInt(line))
+	}
+	return stuff
 }

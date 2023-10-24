@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/jonchen727/2022-AdventofCode/helpers"
+	"github.com/jonchen727/AdventofGo/helpers"
 	_ "embed"
 	"flag"
 	"fmt"
