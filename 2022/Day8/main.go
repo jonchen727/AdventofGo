@@ -10,7 +10,7 @@ import (
 	"flag"
 	"time"
 	//"sort"
-	"github.com/jonchen727/2022-AdventofCode/helpers"
+	"github.com/jonchen727/AdventofGo/helpers"
 )
 
 //go:embed input.txt
