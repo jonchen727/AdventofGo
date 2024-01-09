@@ -1,0 +1,180 @@
+package main
+
+import (
+	_ "embed"
+	"fmt"
+	//"slices"
+	"reflect"
+	"strings"
+	//"strconv"
+	"flag"
+	"math"
+	"time"
+	//"sort"
+	"github.com/jonchen727/AdventofGo/helpers"
+)
+
+//go:embed input.txt
+var input string
+
+func init() {
+	input = strings.TrimRight(input, "\n")
+	if len(input) == 0 {
+		panic("input is empty")
+	}
+
+}
+
+func main() {
+	start := time.Now()
+	var part int
+	flag.IntVar(&part, "part", 1, "part of the puzzle to run")
+	flag.Parse()
+
+	if part == 1 {
+		ans := part1(input)
+
+		fmt.Println("Part 1 Answer:", ans)
+	} else {
+		ans := part2(input)
+		fmt.Println("Part 2 Answer:", ans)
+	}
+	duration := time.Since(start) //sets duration to time difference since start
+	fmt.Println("This Script took:", duration, "to complete!")
+}
+
+func part1(input string) int {
+	ans := math.MaxInt64
+	seeds, conversions := parseInput(input)
+	seedList := buildSeeds(seeds, conversions)
+	for _, seed := range seedList {
+		ans = helpers.MinInt(ans, seed.Location)
+	}
+	return ans
+}
+
+func part2(input string) int {
+	ans := 0
+	return ans
+}
+
+type Seed struct {
+	Num         int
+	Soil        int
+	Fertilizer  int
+	Water       int
+	Light       int
+	Temperature int
+	Humidity    int
+	Location    int
+}
+
+type Map struct {
+	input      string
+	output     string
+	conversion map[int]int
+	next       *Map
+}
+
+func buildSeeds(seeds []string, conversions map[string]*Map) []Seed {
+	seedList := []Seed{}
+	for _, seed := range seeds {
+		Seed := Seed{}
+		Seed.Num = helpers.ToInt(seed)
+
+		//start filling in values
+		_, ok := conversions["seed"].conversion[Seed.Num]
+		if ok {
+			Seed.Soil = conversions["seed"].conversion[Seed.Num]
+		} else {
+			Seed.Soil = Seed.Num
+		}
+		next := conversions["seed"].next
+		start_val := Seed.Soil
+
+		for next != nil {
+			//fmt.Println(next.output)
+			_, ok := next.conversion[start_val]
+			if ok {
+				start_val = next.conversion[start_val]
+				setField(&Seed, strings.Title(next.output), start_val)
+			} else {
+				//start_val = start_val
+				setField(&Seed, strings.Title(next.output), start_val)
+			}
+			next = next.next
+		}
+		seedList = append(seedList, Seed)
+	}
+
+	return seedList
+}
+
+func setField(obj interface{}, name string, value int) {
+	reflectValue := reflect.ValueOf(obj)
+	if reflectValue.Kind() != reflect.Ptr || reflectValue.IsNil() {
+		fmt.Println("Object is not a pointer or is nil")
+		return
+	}
+
+	reflectValue = reflectValue.Elem()
+	fieldVal := reflectValue.FieldByName(name)
+
+	if !fieldVal.IsValid() {
+		fmt.Printf("Field %s not found\n", name)
+		return
+	}
+
+	if !fieldVal.CanSet() {
+		fmt.Printf("Field %s cannot be set\n", name)
+		return
+	}
+
+	if fieldVal.Kind() != reflect.Int {
+		fmt.Printf("Field %s is not an int, it is a %s\n", name, fieldVal.Kind())
+		return
+	}
+
+	fieldVal.SetInt(int64(value))
+}
+
+func parseInput(input string) ([]string, map[string]*Map) {
+	lines := strings.Split(input, "\n\n")
+	seeds := strings.Split(strings.Split(lines[0], ": ")[1], " ")
+	//fmt.Println(seeds)
+	conversions := make(map[string]*Map)
+	for _, types := range lines[1:] {
+		Map := Map{
+			conversion: make(map[int]int),
+		}
+		split := strings.Split(types, ":\n")
+
+		// fill in input to output
+		title := strings.Replace(split[0], "-", " ", -1)
+		_, ok := fmt.Sscanf(title, "%s to %s map", &Map.input, &Map.output)
+		if ok != nil {
+			panic("You suck at coding")
+		}
+
+		// fill in conversions
+		for _, line := range strings.Split(split[1], "\n") {
+			var input, output, size int
+			_, ok := fmt.Sscanf(line, "%d %d %d", &output, &input, &size)
+			if ok != nil {
+				panic("You suck at coding")
+			}
+			//	fmt.Println("Input:", input, "Output:", output, "Size:", size)
+			for i := 0; i < size; i++ {
+				Map.conversion[input+i] = output + i
+			}
+
+		}
+		//fmt.Println(Map)
+		conversions[Map.input] = &Map
+	}
+
+	for _, c := range conversions {
+		c.next = conversions[c.output]
+	}
+	return seeds, conversions
+}
