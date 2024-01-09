@@ -59,6 +59,10 @@ func part1(input string) int {
 
 func part2(input string) int {
 	ans := 0
+	games := parseInput(input)
+	for _, game := range games {
+		ans += game.maxRed * game.maxGreen * game.maxBlue
+	}
 	return ans
 }
 
