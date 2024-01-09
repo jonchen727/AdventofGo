@@ -62,30 +62,71 @@ func part1(input string) int {
 				}
 			}
 		}
-
 		ans += score
 	}
-
 	return ans
 }
 
 func part2(input string) int {
 	ans := 0
+	cards := parseInput(input)
+	queue := make([]Card, len(cards))
+	cache := map[int]int{}
+	copy(queue, cards)
+
+	for _, card := range cards {
+		count := 0
+		for winner, _ := range card.winners {
+			_, ok := card.cards[winner]
+			if ok {
+				count++
+			}
+		}
+		cache[card.number] = count
+	}
+	for true {
+		current := queue[0]
+		// fmt.Println("Current:", current.number)
+		queue = queue[1:]
+		// fmt.Print("Queue: ")
+		// for _, card := range queue {
+		//   fmt.Print(card.number, ", ")
+		// }
+		// fmt.Println()
+		//fmt.Println(queue)
+		ans++
+		wins := 0
+		//fmt.Println(len(queue))
+		if len(queue) == 0 {
+			break
+		}
+		// check winners with cards
+		wins, _ = cache[current.number]
+		if wins == 0 {
+			continue
+		} else {
+			add := make([]Card, wins)
+			copy(add, cards[(current.number+1):(current.number+wins+1)])
+			queue = append(add, queue...)
+		}
+	}
 	return ans
 }
 
 type Card struct {
 	winners map[int]bool
 	cards   map[int]bool
+	number  int
 }
 
 func parseInput(input string) []Card {
 	cards := []Card{}
 	lines := strings.Split(input, "\n")
-	for _, line := range lines {
+	for i, line := range lines {
 		card := Card{
 			winners: map[int]bool{},
 			cards:   map[int]bool{},
+			number:  i,
 		}
 		sets := strings.Split(strings.Split(strings.Replace(line, "  ", " ", -1), ": ")[1], " | ")
 		for _, winners := range strings.Split(sets[0], " ") {
@@ -98,5 +139,6 @@ func parseInput(input string) []Card {
 		}
 		cards = append(cards, card)
 	}
+	// fmt.Println(cards)
 	return cards
 }
