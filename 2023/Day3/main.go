@@ -45,7 +45,7 @@ func main() {
 
 func part1(input string) int {
 	ans := 0
-	arr, parts := parseInput(input)
+	arr, parts, _ := parseInput(input)
 	for _, part := range parts {
 		coordinates := [][]int{}
 		left := []int{part.minCol - 1, part.row}
@@ -85,6 +85,63 @@ func part1(input string) int {
 
 func part2(input string) int {
 	ans := 0
+	_, parts, gearMap := parseInput(input)
+	partMap := map[string]int{}
+	for idx, part := range parts {
+		for i := part.minCol; i <= part.maxCol; i++ {
+			partMap[strconv.Itoa(i)+","+strconv.Itoa(part.row)] = idx
+		}
+	}
+	Gears := []Gear{}
+	for key, _ := range gearMap {
+		Gear := Gear{}
+		counter := 0
+		seen := map[int]bool{}
+		//build 3x3 grid around gear
+		coordinates := [][]int{}
+		left := []int{helpers.ToInt(strings.Split(key, ",")[0]) - 1, helpers.ToInt(strings.Split(key, ",")[1])}
+		right := []int{helpers.ToInt(strings.Split(key, ",")[0]) + 1, helpers.ToInt(strings.Split(key, ",")[1])}
+		top := [][]int{}
+		bottom := [][]int{}
+		for i := helpers.ToInt(strings.Split(key, ",")[0]) - 1; i <= helpers.ToInt(strings.Split(key, ",")[0])+1; i++ {
+			top = append(top, []int{i, helpers.ToInt(strings.Split(key, ",")[1]) - 1})
+			bottom = append(bottom, []int{i, helpers.ToInt(strings.Split(key, ",")[1]) + 1})
+		}
+		coordinates = append(coordinates, []int{left[0], left[1]})
+		coordinates = append(coordinates, []int{right[0], right[1]})
+		coordinates = append(coordinates, top...)
+		coordinates = append(coordinates, bottom...)
+		//fmt.Println("Gear:", key, "Coordinates:", coordinates)
+		for j, coordinate := range coordinates {
+			_, ok := partMap[strconv.Itoa(coordinate[0])+","+strconv.Itoa(coordinate[1])]
+			if ok {
+				//fmt.Println("found part")
+				if _, ok := seen[partMap[strconv.Itoa(coordinate[0])+","+strconv.Itoa(coordinate[1])]]; ok {
+					//fmt.Println("already seen")
+					if j == len(coordinates)-1 && counter == 2 {
+						Gears = append(Gears, Gear)
+					}
+					continue
+				}
+				Gear.parts = append(Gear.parts, parts[partMap[strconv.Itoa(coordinate[0])+","+strconv.Itoa(coordinate[1])]])
+				seen[partMap[strconv.Itoa(coordinate[0])+","+strconv.Itoa(coordinate[1])]] = true
+				counter++
+			}
+			//fmt.Println("counter:", counter)
+			if j == len(coordinates)-1 && counter == 2 {
+				Gears = append(Gears, Gear)
+				//fmt.Println(Gears)
+			}
+		}
+	}
+	for _, gear := range Gears {
+		ratio := 1
+		for _, part := range gear.parts {
+			ratio *= part.number
+		}
+		ans += ratio
+	}
+	//fmt.Println(partMap)
 	return ans
 }
 
@@ -95,11 +152,15 @@ type Part struct {
 	maxCol int
 }
 
-func parseInput(input string) ([]string, []Part) {
+type Gear struct {
+	parts []Part
+}
+
+func parseInput(input string) ([]string, []Part, map[string]bool) {
 	lines := strings.Split(input, "\n")
 	arr := []string{}
 	parts := []Part{}
-
+	gearMap := map[string]bool{}
 	for i, line := range lines {
 		arr = append(arr, line)
 		var ram string
@@ -108,8 +169,8 @@ func parseInput(input string) ([]string, []Part) {
 		toggle := 0
 		for j, char := range line {
 			if _, err := strconv.Atoi(string(char)); err != nil {
-				if string(char) != "." {
-					//fmt.Printf("Non-numeric character: %q [Code point: %U]\n", char, char)
+				if string(char) == "*" {
+					gearMap[strconv.Itoa(j)+","+strconv.Itoa(i)] = true
 				}
 
 				if toggle == 1 {
@@ -151,5 +212,5 @@ func parseInput(input string) ([]string, []Part) {
 			}
 		}
 	}
-	return arr, parts
+	return arr, parts, gearMap
 }
