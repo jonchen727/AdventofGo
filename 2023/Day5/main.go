@@ -70,10 +70,16 @@ type Seed struct {
 }
 
 type Map struct {
-	input      string
-	output     string
-	conversion map[int]int
-	next       *Map
+	input  string
+	output string
+	ranges []Ranges
+	next   *Map
+}
+
+type Ranges struct {
+	source      int
+	destination int
+	span        int
 }
 
 func buildSeeds(seeds []string, conversions map[string]*Map) []Seed {
@@ -83,31 +89,29 @@ func buildSeeds(seeds []string, conversions map[string]*Map) []Seed {
 		Seed.Num = helpers.ToInt(seed)
 
 		//start filling in values
-		_, ok := conversions["seed"].conversion[Seed.Num]
-		if ok {
-			Seed.Soil = conversions["seed"].conversion[Seed.Num]
-		} else {
-			Seed.Soil = Seed.Num
-		}
+		Seed.Soil = convert(*conversions["seed"], Seed.Num)
 		next := conversions["seed"].next
 		start_val := Seed.Soil
 
 		for next != nil {
 			//fmt.Println(next.output)
-			_, ok := next.conversion[start_val]
-			if ok {
-				start_val = next.conversion[start_val]
-				setField(&Seed, strings.Title(next.output), start_val)
-			} else {
-				//start_val = start_val
-				setField(&Seed, strings.Title(next.output), start_val)
-			}
+			start_val = convert(*next, start_val)
+			setField(&Seed, strings.Title(next.output), start_val)
 			next = next.next
 		}
 		seedList = append(seedList, Seed)
 	}
-
 	return seedList
+}
+
+func convert(item Map, number int) int {
+	for _, rng := range item.ranges {
+		diff := number - rng.source
+		if diff >= 0 && diff <= rng.span {
+			return rng.destination + diff
+		}
+	}
+	return number
 }
 
 func setField(obj interface{}, name string, value int) {
@@ -144,9 +148,7 @@ func parseInput(input string) ([]string, map[string]*Map) {
 	//fmt.Println(seeds)
 	conversions := make(map[string]*Map)
 	for _, types := range lines[1:] {
-		Map := Map{
-			conversion: make(map[int]int),
-		}
+		Map := Map{}
 		split := strings.Split(types, ":\n")
 
 		// fill in input to output
@@ -158,16 +160,12 @@ func parseInput(input string) ([]string, map[string]*Map) {
 
 		// fill in conversions
 		for _, line := range strings.Split(split[1], "\n") {
-			var input, output, size int
-			_, ok := fmt.Sscanf(line, "%d %d %d", &output, &input, &size)
+			ranges := Ranges{}
+			_, ok := fmt.Sscanf(line, "%d %d %d", &ranges.destination, &ranges.source, &ranges.span)
 			if ok != nil {
 				panic("You suck at coding")
 			}
-			//	fmt.Println("Input:", input, "Output:", output, "Size:", size)
-			for i := 0; i < size; i++ {
-				Map.conversion[input+i] = output + i
-			}
-
+			Map.ranges = append(Map.ranges, ranges)
 		}
 		//fmt.Println(Map)
 		conversions[Map.input] = &Map
