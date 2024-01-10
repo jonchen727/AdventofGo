@@ -54,8 +54,10 @@ func part1(input string) int {
 }
 
 func part2(input string) int {
-	ans := 0
-	parseInput(input, 2)
+
+	race := parseInput(input, 2)[0]
+	findWins(race)
+	ans := race.wins
 	return ans
 }
 
@@ -104,13 +106,21 @@ func parseInput(input string, part int) map[int]*Race {
 		}
 	}
 	if part == 2 {
-		for _, line := range lines {
+		for i, line := range lines {
 			for strings.Contains(line, " ") {
 				line = strings.Replace(line, " ", "", -1)
 			}
 			line = strings.Split(line, ":")[1]
-			
-			fmt.Println(line)
+			if _, ok := races[0]; !ok {
+				races[0] = &Race{}
+			}
+			race := races[0]
+			switch i {
+			case 0:
+				race.time = helpers.ToFloat(string(line))
+			case 1:
+				race.distance = helpers.ToFloat(string(line))
+			}
 		}
 	}
 	return races
