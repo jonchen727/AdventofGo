@@ -43,6 +43,25 @@ func ToInt(arg interface{}) int {
 	return val
 }
 
+func ToFloat(arg interface{}) float64 {
+	var val float64
+	switch arg.(type) {
+	case string:
+		var err error
+		val, err = strconv.ParseFloat(arg.(string), 64)
+		if err != nil {
+			panic("error converting string to float" + err.Error())
+		}
+	case rune:
+		val = float64(arg.(rune))
+	case int:
+		val = float64(arg.(int))
+	default:
+	  panic(fmt.Sprintf("unhandled type %T", arg))
+	}
+	return val
+}
+
 func ToString(arg interface{}) string {
 	var str string
 	switch arg.(type) {
