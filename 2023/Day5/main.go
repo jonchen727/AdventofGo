@@ -54,8 +54,72 @@ func part1(input string) int {
 }
 
 func part2(input string) int {
-	ans := 0
+	ans := math.MaxInt64
+	seeds, conversions := parseInput(input)
+	newSeeds := []newSeed{}
+	for i := 0; i <= len(seeds)/2; {
+		start := helpers.ToInt(seeds[i])
+		span := helpers.ToInt(seeds[i+1])
+		end := start + span
+		seed := newSeed{start, end, span}
+		newSeeds = append(newSeeds, seed)
+		i = i + 2
+	}
+	//fmt.Println(conversions["humidity"])
+
+	next := conversions["seed"]
+	for true {
+		new := []newSeed{}
+		for len(newSeeds) > 0 {
+			start := newSeeds[0].start
+			end := newSeeds[0].end
+			//fmt.Println(next.output)
+			newSeeds = newSeeds[1:]
+			matched := false
+			for _, ranges := range next.ranges {
+				sdest := ranges.destination
+				ssource := ranges.source
+				span := ranges.span
+				os := helpers.MaxInt(start, ssource)
+				oe := helpers.MinInt(end, ssource+span)
+				if os < oe {
+					new = append(new, newSeed{os - ssource + sdest, oe - ssource + sdest, 0})
+					//fmt.Println("added os<oe", newSeed{os - ssource + sdest, oe - ssource + sdest, 0})
+					matched = true
+					if os > start {
+						newSeeds = append(newSeeds, newSeed{start, os, 0})
+						//fmt.Println("added os>s", newSeed{start, os, 0})
+					}
+					if end > oe {
+						newSeeds = append(newSeeds, newSeed{oe, end, 0})
+						//fmt.Println("added e>oe", newSeed{oe, end, 0})
+					}
+					break
+				}
+			}
+			if !matched {
+				new = append(new, newSeed{start, end, 0})
+				//fmt.Println("added no match", newSeed{start, end, 0})
+			}
+		}
+		newSeeds = new
+		if next.next != nil {
+			next = next.next
+		} else {
+			break
+		}
+	}
+	for _, seed := range newSeeds {
+		ans = helpers.MinInt(ans, seed.start)
+	}
+	//fmt.Println(newSeeds)
 	return ans
+}
+
+type newSeed struct {
+	start int
+	end   int
+	span  int
 }
 
 type Seed struct {
@@ -70,10 +134,11 @@ type Seed struct {
 }
 
 type Map struct {
-	input  string
-	output string
-	ranges []Ranges
-	next   *Map
+	input    string
+	output   string
+	ranges   []Ranges
+	previous *Map
+	next     *Map
 }
 
 type Ranges struct {
@@ -173,6 +238,9 @@ func parseInput(input string) ([]string, map[string]*Map) {
 
 	for _, c := range conversions {
 		c.next = conversions[c.output]
+		if c.input != "seed" {
+			c.previous = conversions[c.input]
+		}
 	}
 	return seeds, conversions
 }
