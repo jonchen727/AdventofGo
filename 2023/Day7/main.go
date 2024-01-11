@@ -44,14 +44,14 @@ func main() {
 
 func part1(input string) int {
 	ans := 0
-	hands := parseInput(input)
+	hands := parseInput(input, 1)
 	handsMap := make(map[int][]Hand)
 	for _, hand := range hands {
 		handsMap[kindToInt(hand.Kind)] = append(handsMap[kindToInt(hand.Kind)], hand)
 	}
 	for _, hands := range handsMap {
 		sort.Slice(hands, func(i, j int) bool {
-			return compareHands(hands[i], hands[j])
+			return compareHands(hands[i], hands[j], 1)
 		})
 	}
 	keys := make([]int, 0, len(handsMap))
@@ -74,6 +74,31 @@ func part1(input string) int {
 
 func part2(input string) int {
 	ans := 0
+	hands := parseInput(input, 2)
+	handsMap := make(map[int][]Hand)
+	for _, hand := range hands {
+		handsMap[kindToInt(hand.Kind)] = append(handsMap[kindToInt(hand.Kind)], hand)
+	}
+	for _, hands := range handsMap {
+		sort.Slice(hands, func(i, j int) bool {
+			return compareHands(hands[i], hands[j], 2)
+		})
+	}
+	keys := make([]int, 0, len(handsMap))
+	for k := range handsMap {
+		keys = append(keys, k)
+	}
+	sort.Sort(sort.IntSlice(keys))
+
+	var ranked []Hand
+	for _, k := range keys {
+		ranked = append(ranked, handsMap[k]...)
+	}
+
+	for i, hand := range ranked {
+		ans += (i + 1) * hand.Bet
+		//fmt.Println(hand)
+	}
 	return ans
 }
 
@@ -82,10 +107,22 @@ var rankValues = map[string]int{
 	"9": 9, "8": 8, "7": 7, "6": 6, "5": 5, "4": 4, "3": 3, "2": 2,
 }
 
-func compareHands(h1, h2 Hand) bool {
+var rankValues2 = map[string]int{
+	"A": 14, "K": 13, "Q": 12, "J": 1, "T": 10,
+	"9": 9, "8": 8, "7": 7, "6": 6, "5": 5, "4": 4, "3": 3, "2": 2,
+}
+
+func compareHands(h1 Hand, h2 Hand, part int) bool {
+	rankMap := map[string]int{}
+	switch part {
+	case 1:
+		rankMap = rankValues
+	case 2:
+		rankMap = rankValues2
+	}
 	for i := 0; i < len(h1.Cards) && i < len(h2.Cards); i++ {
-		if rankValues[h1.Cards[i]] != rankValues[h2.Cards[i]] {
-			return rankValues[h1.Cards[i]] < rankValues[h2.Cards[i]]
+		if rankMap[h1.Cards[i]] != rankMap[h2.Cards[i]] {
+			return rankMap[h1.Cards[i]] < rankMap[h2.Cards[i]]
 		}
 	}
 	return false // If all cards are equal, return false (or handle as needed)
@@ -108,56 +145,72 @@ func kindToInt(kind []bool) int {
 	return result
 }
 
-func (h *Hand) classify() {
+func (h *Hand) classify(part int) {
 	frequencyMap := make(map[string]int)
-
-	h.sortCards()
+	jokerCount := 0
 
 	for _, card := range h.Cards {
-		frequencyMap[card]++
+		if card == "J" && part == 2 {
+			jokerCount++
+		} else {
+			frequencyMap[card]++
+		}
 	}
 
 	h.Kind = make([]bool, 5) // 5-bit register for hand type
-
-	// Check for Five of a Kind
-	if countInMap(frequencyMap, 5) {
+	// Five of a Kind
+	if countInMap(frequencyMap, 5-jokerCount) || jokerCount == 5 {
 		h.Kind[4] = true
 		return
 	}
-	// Check for Four of a Kind
-	if countInMap(frequencyMap, 4) {
+
+	// Four of a Kind
+	if countInMap(frequencyMap, 4-jokerCount) {
 		h.Kind[3] = true
 		return
 	}
-	// Check for Full House (Three of a Kind and a Pair)
-	if countInMap(frequencyMap, 3) && countInMap(frequencyMap, 2) {
+
+	// Full House
+	if (countInMap(frequencyMap, 3) && countInMap(frequencyMap, 2)) || (countPairs(frequencyMap) == 2 && jokerCount == 1) {
 		h.Kind[2] = true
 		h.Kind[0] = true
 		return
 	}
-	// Check for Three of a Kind
-	if countInMap(frequencyMap, 3) {
+
+	// Three of a Kind
+	if countInMap(frequencyMap, 3-jokerCount) {
 		h.Kind[2] = true
 		return
 	}
-	// Check for Two Pair
-	if countPairs(frequencyMap) == 2 {
+
+	// Two Pair
+	if countPairs(frequencyMap) == 2 && jokerCount == 0 {
 		h.Kind[1] = true
 		return
 	}
-	// Check for One Pair
-	if countPairs(frequencyMap) == 1 {
+
+	// One Pair
+	if countPairs(frequencyMap) == 1 || jokerCount == 1 {
 		h.Kind[0] = true
 		return
 	}
+
 	// High Card is represented by all bits being false
 }
 
-func (h *Hand) sortCards() {
+func (h *Hand) sortCards(part int) {
 	h.Sorted = make([]string, len(h.Cards))
 	copy(h.Sorted, h.Cards)
+	rankMap := map[string]int{}
+	switch part {
+	case 1:
+		rankMap = rankValues
+	case 2:
+		rankMap = rankValues2
+	}
+
 	sort.Slice(h.Sorted, func(i, j int) bool {
-		return rankValues[h.Sorted[i]] > rankValues[h.Sorted[j]]
+		return rankMap[h.Sorted[i]] > rankMap[h.Sorted[j]]
 	})
 }
 
@@ -182,7 +235,7 @@ func countPairs(frequencyMap map[string]int) int {
 	return pairs
 }
 
-func parseInput(input string) []Hand {
+func parseInput(input string, part int) []Hand {
 	lines := strings.Split(input, "\n")
 	hands := []Hand{}
 	for _, line := range lines {
@@ -191,7 +244,7 @@ func parseInput(input string) []Hand {
 		for _, card := range split[0] {
 			hand.Cards = append(hand.Cards, string(card))
 		}
-		hand.classify()
+		hand.classify(part)
 		hand.Bet = helpers.ToInt(split[1])
 		hands = append(hands, hand)
 	}
