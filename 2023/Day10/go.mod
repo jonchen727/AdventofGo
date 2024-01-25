@@ -1,4 +1,4 @@
-module github.com/jonchen727/AdventofGo/2023/Day9
+module github.com/jonchen727/AdventofGo/2023/Day10
 
 go 1.21.1
 

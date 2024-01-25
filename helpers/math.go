@@ -1,6 +1,9 @@
 package helpers
 
-import "reflect"
+import (
+	"reflect"
+	"golang.org/x/exp/constraints"
+)
 
 func MaxInt(nums ...int) int {
 	maxNum := nums[0]
@@ -40,6 +43,10 @@ func MinFloat(nums ...float64) float64 {
 	return minNum
 }
 
+type Numeric interface {
+	constraints.Integer | constraints.Float
+}
+
 func MaxFloat(nums ...float64) float64 {
 	maxNum := nums[0]
 	for _, num := range nums {
@@ -50,12 +57,15 @@ func MaxFloat(nums ...float64) float64 {
 	return maxNum
 }
 
-func Abs(num int) int {
-	if num < 0 {
-		return -num
+func Abs[T Numeric](num T) T {
+	var zero T
+	if num < zero {
+			return -num
 	}
 	return num
 }
+
+
 
 func DeepEqual(a1, a2 interface{}) bool {
 	return reflect.DeepEqual(a1, a2)
