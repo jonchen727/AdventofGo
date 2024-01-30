@@ -86,11 +86,11 @@ func ManhattanDistanceExp(g1, g2 Galaxy, factor int64) int64 {
 	r := int64(0)
 	dexpc := g1.cExp - g2.cExp
 	dexpr := g1.rExp - g2.rExp
-	dc := int64((g1.c - g2.c))-dexpc
-	dr := int64((g1.r - g2.r))-dexpr
+	dc := int64((g1.c - g2.c)) - dexpc
+	dr := int64((g1.r - g2.r)) - dexpr
 
-	c = helpers.Abs((dexpc*factor) + dc)
-	r = helpers.Abs((dexpr*factor) + dr)
+	c = helpers.Abs((dexpc * factor) + dc)
+	r = helpers.Abs((dexpr * factor) + dr)
 
 	// c = helpers.Abs(g1.c4)
 	// if g1.rExp == g2.rExp {
