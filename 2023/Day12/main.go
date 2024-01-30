@@ -46,8 +46,8 @@ func main() {
 func part1(input string) int {
 	ans := 0
 	rSprings := parseInput(input)
-	for _, r := range rSprings {
-		ans += r.findArrangements()
+	for i, _ := range rSprings {
+		ans += rSprings[i].findArrangements()
 		//fmt.Println(r.springs, r.group, r.arrangements)
 	}
 	return ans
@@ -55,15 +55,30 @@ func part1(input string) int {
 
 func part2(input string) int {
 	ans := 0
+	rSprings := parseInput(input)
+	for i, _ := range rSprings {
+		rSprings[i].unFold()
+		ans += rSprings[i].findArrangements()
+	}
 	return ans
 }
 
 func (r *rSpring) findArrangements() int {
-	r.arrangements = count(r.springs, r.group)
+	cache := map[string]int{}
+	r.arrangements = count(r.springs, r.group, cache)
 	return r.arrangements
 }
 
-func count(s string, g []int) int {
+func (r *rSpring) unFold() {
+	sAdd := r.springs
+	gAdd := r.group
+	for i := 0; i < 4; i++ {
+		r.springs += "?" + sAdd
+		r.group = append(r.group, gAdd...)
+	}
+}
+
+func count(s string, g []int, cache map[string]int) int {
 	if s == "" {
 		if len(g) == 0 {
 			return 1
@@ -78,20 +93,27 @@ func count(s string, g []int) int {
 			return 1
 		}
 	}
+
+	key := s + "|" + fmt.Sprint(g)
+	if _, ok := cache[key]; ok {
+		return cache[key]
+	}
+
 	total := 0
 
 	if s[0] == '.' || s[0] == '?' {
-		total += count(s[1:], g)
+		total += count(s[1:], g, cache)
 	}
 	if s[0] == '#' || s[0] == '?' {
 		if (g[0] <= len(s)) && (!strings.Contains(s[:g[0]], ".")) && (g[0] == len(s) || s[g[0]] != '#') {
 			if g[0] == len(s) {
-				total += count("", g[1:])
+				total += count("", g[1:], cache)
 			} else {
-				total += count(s[g[0]+1:], g[1:])
+				total += count(s[g[0]+1:], g[1:], cache)
 			}
 		}
 	}
+	cache[key] = total
 	return total
 }
 
