@@ -46,7 +46,7 @@ func main() {
 func part1(input string) int {
 	ans := 0
 	galaxies, rmax, cmax := parseInput(input)
-	expandSpace(galaxies, rmax, cmax)
+	expandSpace(galaxies, rmax, cmax, 1)
 
 	for i := 0; i < len(galaxies); i++ {
 		for j := i + 1; j < len(galaxies); j++ {
@@ -56,8 +56,16 @@ func part1(input string) int {
 	return ans
 }
 
-func part2(input string) int {
-	ans := 0
+func part2(input string) int64 {
+	ans := int64(0)
+	galaxies, rmax, cmax := parseInput(input)
+	expandSpace(galaxies, rmax, cmax, 0)
+
+	for i := 0; i < len(galaxies); i++ {
+		for j := i + 1; j < len(galaxies); j++ {
+			ans += ManhattanDistanceExp(galaxies[i], galaxies[j], 1000000)
+		}
+	}
 	return ans
 }
 
@@ -65,13 +73,49 @@ type Galaxy struct {
 	r      int
 	c      int
 	symbol string
+	rExp   int64
+	cExp   int64
 }
 
 func ManhattanDistance(g1, g2 Galaxy) int {
 	return helpers.Abs(g1.r-g2.r) + helpers.Abs(g1.c-g2.c)
 }
 
-func expandSpace(galaxies []Galaxy, rmax int, cmax int) {
+func ManhattanDistanceExp(g1, g2 Galaxy, factor int64) int64 {
+	c := int64(0)
+	r := int64(0)
+	dexpc := g1.cExp - g2.cExp
+	dexpr := g1.rExp - g2.rExp
+	dc := int64((g1.c - g2.c))-dexpc
+	dr := int64((g1.r - g2.r))-dexpr
+
+	c = helpers.Abs((dexpc*factor) + dc)
+	r = helpers.Abs((dexpr*factor) + dr)
+
+	// c = helpers.Abs(g1.c4)
+	// if g1.rExp == g2.rExp {
+	// 	if g1.r == g2.r {
+	// 		r = 0
+	// 	} else {
+	// 		r = 1
+	// 	}
+	// } else {
+	// 	r = factor*helpers.Abs(g1.rExp-g2.rExp)
+	// }
+	// if g1.cExp == g2.cExp {
+	// 	if g1.c == g2.c {
+	// 		c = 0
+	// 	} else {
+	// 		c = 1
+	// 	}
+	// } else {
+	// 	c = factor*helpers.Abs(g1.cExp-g2.cExp)
+	// }
+	return r + c
+
+}
+
+func expandSpace(galaxies []Galaxy, rmax int, cmax int, factor int) {
 	rspace := map[int][]*Galaxy{}
 	//rkey := []int{}
 	cspace := map[int][]*Galaxy{}
@@ -103,7 +147,8 @@ func expandSpace(galaxies []Galaxy, rmax int, cmax int) {
 		if _, ok := rspace[i]; !ok {
 			for j := i + 1; j < rmax; j++ {
 				for k, _ := range rspace[j] {
-					rspace[j][k].r += 1
+					rspace[j][k].r += factor
+					rspace[j][k].rExp += 1
 				}
 			}
 		}
@@ -113,7 +158,8 @@ func expandSpace(galaxies []Galaxy, rmax int, cmax int) {
 		if _, ok := cspace[i]; !ok {
 			for j := i + 1; j < cmax; j++ {
 				for k, _ := range cspace[j] {
-					cspace[j][k].c += 1
+					cspace[j][k].c += factor
+					cspace[j][k].cExp += 1
 				}
 			}
 		}
