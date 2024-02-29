@@ -22,7 +22,6 @@ func init() {
 	if len(input) == 0 {
 		panic("input is empty")
 	}
-
 }
 
 func main() {
@@ -44,7 +43,7 @@ func main() {
 }
 
 func part1(input string) int {
-  ans := 0
+	ans := 0
 	blocks := parseInput(input)
 	for _, block := range blocks {
 		r := findMirror(block, false)
@@ -61,15 +60,17 @@ func findMirror(block []string, mismatch bool) int {
 	for i := 1; i < len(block); i++ {
 		top := reverseSlice(block[:i])
 		bottom := block[i:]
-		mismatches := 0 
+		mismatches := 0
 
 		switch mismatch {
 		case true:
-			for i := 0; i  < len(top) && i < len(bottom); i++ {
-				if top[i] != bottom[i] {
-					mismatches++
-				}
+			if len(top) > len(bottom) {
+				top = top[:len(bottom)]
+			} else {
+				bottom = bottom[:len(top)]
 			}
+			mismatches = countMismatches(top, bottom)
+
 			if mismatches == 1 {
 				return i
 			}
@@ -80,7 +81,6 @@ func findMirror(block []string, mismatch bool) int {
 			} else {
 				bottom = bottom[:len(top)]
 			}
-
 			if slicesEqual(top, bottom) {
 				return i
 			}
@@ -91,10 +91,25 @@ func findMirror(block []string, mismatch bool) int {
 
 func reverseSlice(s []string) []string {
 	r := []string{}
-	for i := len(s)-1; i >= 0; i-- {
+	for i := len(s) - 1; i >= 0; i-- {
 		r = append(r, s[i])
 	}
 	return r
+}
+
+func countMismatches(a, b []string) int {
+	mismatches := 0
+	if len(a) != len(b) {
+		return mismatches
+	}
+	for i, x := range a {
+		for j := range x {
+			if a[i][j] != b[i][j] {
+				mismatches++
+			}
+		}
+	}
+	return mismatches
 }
 
 func slicesEqual(a, b []string) bool {
@@ -128,7 +143,7 @@ func zipSlices(blocks [][]string) [][]string {
 }
 
 func part2(input string) int {
-  ans := 0
+	ans := 0
 	blocks := parseInput(input)
 	for _, block := range blocks {
 		r := findMirror(block, true)
@@ -141,7 +156,7 @@ func part2(input string) int {
 	return ans
 }
 
-func parseInput(input string) ([][]string){
+func parseInput(input string) [][]string {
 	arr := [][]string{}
 	split := strings.Split(input, "\n\n")
 
