@@ -64,10 +64,17 @@ func findMirror(block []string, mismatch bool) int {
 
 		switch mismatch {
 		case true:
+<<<<<<< HEAD
 			if len(top) > len(bottom) {
 				top = top[:len(bottom)]
 			} else {
 				bottom = bottom[:len(top)]
+=======
+			for i := 0; i < len(top) && i < len(bottom); i++ {
+				if top[i] != bottom[i] {
+					mismatches++
+				}
+>>>>>>> 4bc8ccc (add day 14 part 1)
 			}
 			mismatches = countMismatches(top, bottom)
 
@@ -94,6 +101,7 @@ func reverseSlice(s []string) []string {
 	for i := len(s) - 1; i >= 0; i-- {
 		r = append(r, s[i])
 	}
+	fmt.Println(s,r)
 	return r
 }
 
